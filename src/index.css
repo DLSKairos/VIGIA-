@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/*
+ * VIGÍA — index.css (Fase 1: scaffold)
+ * -------------------------------------------------------------
+ * Este archivo se deja MÍNIMO a propósito. El sistema de diseño real
+ * (paleta de marca, tipografía, tokens con `@theme`) lo define el
+ * agente de UX/UI en la fase siguiente. Por ahora solo se importa
+ * Tailwind v4 para que las clases utilitarias funcionen end-to-end
+ * durante el desarrollo del scaffold, el store y el routing.
+ */
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
