@@ -13,6 +13,7 @@ import { useVigiaStore } from '../store/useVigiaStore'
 export default function LoginPage() {
   const isAuthenticated = useVigiaStore((state) => state.isAuthenticated)
   const login = useVigiaStore((state) => state.login)
+  const reabrirPopupAlertas = useVigiaStore((state) => state.reabrirPopupAlertas)
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
@@ -33,6 +34,12 @@ export default function LoginPage() {
     window.setTimeout(() => {
       const ok = login(email, password)
       if (ok) {
+        // El pop-up-resumen de alertas (spec sección 8) debe reaparecer en
+        // cada login nuevo, aunque ya se haya descartado en una sesión
+        // anterior sin recargar la página (popupAlertasDescartado no
+        // persiste entre refrescos, pero sí sobrevive a un logout/login
+        // dentro de la misma sesión de la pestaña).
+        reabrirPopupAlertas()
         navigate('/admin')
       } else {
         setError('Correo o contraseña incorrectos.')

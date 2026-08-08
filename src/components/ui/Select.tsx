@@ -54,7 +54,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400',
             className,
           )}
-          defaultValue={props.defaultValue ?? (placeholder ? '' : undefined)}
+          defaultValue={
+            props.value === undefined ? (props.defaultValue ?? (placeholder ? '' : undefined)) : undefined
+          }
           {...props}
         >
           {placeholder && (

@@ -1,9 +1,16 @@
-import type { ReactElement } from 'react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { type ReactElement, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { AlertasPopup } from '../../components/domain/AlertasPopup'
 import { AdminHeader } from '../../components/layout/AdminHeader'
 import { DemoBar } from '../../components/layout/DemoBar'
+import { NotifBell } from '../../components/layout/NotifBell'
 import { PageContainer } from '../../components/layout/PageContainer'
+import { Button } from '../../components/ui/Button'
 import { cn } from '../../components/ui/cn'
+import { Modal } from '../../components/ui/Modal'
+import { parseFechaISO, toISODateString } from '../../lib/dates'
 import { useVigiaStore } from '../../store/useVigiaStore'
 
 interface NavItem {
@@ -111,17 +118,70 @@ const ALL_ITEMS = NAV_SECTIONS.flatMap((section) => section.items)
  */
 export default function AdminLayout() {
   const logout = useVigiaStore((state) => state.logout)
+  const hoySimuladaISO = useVigiaStore((state) => state.hoySimulada)
+  const moverFecha = useVigiaStore((state) => state.moverFecha)
+  const setFechaSimulada = useVigiaStore((state) => state.setFechaSimulada)
+  const volverAHoy = useVigiaStore((state) => state.volverAHoy)
+  const restablecerDemo = useVigiaStore((state) => state.restablecerDemo)
   const navigate = useNavigate()
+
+  const [confirmRestablecerOpen, setConfirmRestablecerOpen] = useState(false)
 
   function handleLogout() {
     logout()
     navigate('/login')
   }
 
+  const hoySimuladaDate = new Date(hoySimuladaISO)
+
+  function handleCambiarFecha(fechaISODateOnly: string) {
+    // El date picker de la barra de demo entrega 'yyyy-MM-dd' (solo fecha).
+    // Se parsea en hora LOCAL con `parseFechaISO` (nunca `new Date(str)`,
+    // ver nota de off-by-one en lib/dates.ts) y se guarda como ISO datetime
+    // completo, el mismo formato que usa el resto de `demoSlice`.
+    setFechaSimulada(parseFechaISO(fechaISODateOnly).toISOString())
+  }
+
+  function handleRestablecerDemo() {
+    restablecerDemo()
+    setConfirmRestablecerOpen(false)
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      <AdminHeader onLogout={handleLogout} />
-      <DemoBar fechaSimuladaLabel="07 ago 2026" />
+      <AdminHeader onLogout={handleLogout} notifSlot={<NotifBell />} />
+      <DemoBar
+        fechaSimuladaLabel={format(hoySimuladaDate, "dd MMM yyyy", { locale: es })}
+        fechaSimuladaISO={toISODateString(hoySimuladaDate)}
+        onCambiarFecha={handleCambiarFecha}
+        onAvanzar15Dias={() => moverFecha(15, 'dias')}
+        onAvanzar30Dias={() => moverFecha(30, 'dias')}
+        onAvanzar1Mes={() => moverFecha(1, 'meses')}
+        onVolverAHoy={volverAHoy}
+        onRestablecerDemo={() => setConfirmRestablecerOpen(true)}
+      />
+
+      <AlertasPopup />
+
+      <Modal
+        open={confirmRestablecerOpen}
+        onClose={() => setConfirmRestablecerOpen(false)}
+        title="¿Restablecer demo?"
+        description="Se vuelven a sembrar los datos originales (catálogo y trabajadores) y se pierden todos los cambios hechos durante esta demo."
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmRestablecerOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleRestablecerDemo}>
+              Sí, restablecer
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600">Esta acción no se puede deshacer. La sesión de administrador se mantiene activa.</p>
+      </Modal>
 
       {/* Nav mobile: chips horizontales con scroll */}
       <nav aria-label="Navegación admin" className="border-b border-slate-200 bg-white md:hidden">

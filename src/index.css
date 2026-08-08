@@ -157,6 +157,26 @@ h4 {
   scrollbar-color: var(--color-ink-400) transparent;
 }
 
+/* ===========================================================================
+ * Reveal de certificaciones requeridas (spec sección 11.3): al elegir un
+ * cargo en el registro de trabajador, las certificaciones requeridas
+ * aparecen con un stagger visible — el "automático" tiene que VERSE.
+ * ========================================================================= */
+@keyframes cert-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-cert-reveal {
+  animation: cert-reveal 320ms ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

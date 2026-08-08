@@ -19,6 +19,8 @@ export interface ComplianceBarChartProps {
   data?: ComplianceBarDatum[]
   /** Alto del contenedor en px. */
   height?: number
+  /** Nombre del taladro a resaltar (ej. el filtro activo del dashboard). */
+  destacado?: string
 }
 
 /** Datos de ejemplo (shell visual) — Fase 3 los reemplaza con métricas reales por taladro. */
@@ -51,7 +53,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
  * Recharts con datos de ejemplo — Fase 3 pasa `data` con las métricas
  * reales agregadas por taladro (`lib/metrics.ts`).
  */
-export function ComplianceBarChart({ data = MOCK_DATA, height = 260 }: ComplianceBarChartProps) {
+export function ComplianceBarChart({ data = MOCK_DATA, height = 260, destacado }: ComplianceBarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 16, right: 12, left: 0, bottom: 0 }} barSize={44}>
@@ -73,7 +75,13 @@ export function ComplianceBarChart({ data = MOCK_DATA, height = 260 }: Complianc
         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(148,163,184,0.12)' }} />
         <Bar dataKey="porcentaje" radius={[6, 6, 0, 0]} isAnimationActive={false}>
           {data.map((entry) => (
-            <Cell key={entry.taladro} fill={barColor(entry.porcentaje)} />
+            <Cell
+              key={entry.taladro}
+              fill={barColor(entry.porcentaje)}
+              stroke={entry.taladro === destacado ? '#0B1220' : 'transparent'}
+              strokeWidth={entry.taladro === destacado ? 3 : 0}
+              opacity={destacado && entry.taladro !== destacado ? 0.45 : 1}
+            />
           ))}
           <LabelList
             dataKey="porcentaje"

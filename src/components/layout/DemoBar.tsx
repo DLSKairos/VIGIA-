@@ -2,8 +2,11 @@ import type { ReactNode } from 'react'
 import { Button } from '../ui/Button'
 
 export interface DemoBarProps {
-  /** Fecha simulada ya formateada para mostrar (ej. "07 ago 2026"). Fase 3 la calcula desde el store. */
+  /** Fecha simulada ya formateada para mostrar (ej. "07 ago 2026"). */
   fechaSimuladaLabel?: string
+  /** Valor del `<input type="date">`, formato 'yyyy-MM-dd'. */
+  fechaSimuladaISO?: string
+  onCambiarFecha?: (fechaISO: string) => void
   onAvanzar15Dias?: () => void
   onAvanzar30Dias?: () => void
   onAvanzar1Mes?: () => void
@@ -34,11 +37,14 @@ function DemoBarButton({ onClick, children }: { onClick?: () => void; children: 
 /**
  * Barra de demo (spec sección 9): visible y etiquetada como "modo demo",
  * para que quien presenta (no el desarrollador) controle la fecha
- * simulada y pueda restablecer los datos. Shell visual — Fase 3 conecta
- * los handlers al `demoSlice` del store.
+ * simulada y pueda restablecer los datos. Conectada al `demoSlice` del
+ * store (Fase 3): el `<input type="date">` fija la fecha exacta, los chips
+ * la mueven relativamente, y "Restablecer demo" re-siembra todo.
  */
 export function DemoBar({
   fechaSimuladaLabel = 'hoy',
+  fechaSimuladaISO,
+  onCambiarFecha,
   onAvanzar15Dias,
   onAvanzar30Dias,
   onAvanzar1Mes,
@@ -48,7 +54,7 @@ export function DemoBar({
   return (
     <div className="border-b border-brand-800 bg-ink-900">
       <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-300">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-400" aria-hidden="true" />
             Modo demo
@@ -57,6 +63,16 @@ export function DemoBar({
             Fecha simulada:{' '}
             <time className="font-mono font-semibold text-white">{fechaSimuladaLabel}</time>
           </span>
+          <label className="sr-only" htmlFor="demo-bar-fecha-simulada">
+            Cambiar fecha simulada
+          </label>
+          <input
+            id="demo-bar-fecha-simulada"
+            type="date"
+            value={fechaSimuladaISO ?? ''}
+            onChange={(event) => event.target.value && onCambiarFecha?.(event.target.value)}
+            className="h-9 cursor-pointer scheme-dark rounded-vigia-sm border border-ink-600 bg-ink-800 px-2.5 text-sm font-mono text-white transition-colors hover:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

@@ -1,7 +1,12 @@
+import { Link } from 'react-router-dom'
 import { EstadoBadge } from '../../components/domain/EstadoBadge'
 import { KpiCard } from '../../components/domain/KpiCard'
 import { NoAptoFlag } from '../../components/domain/NoAptoFlag'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { useNotificaciones } from '../../hooks/useNotificaciones'
+import { useTrabajadoresConEstado } from '../../hooks/useTrabajadoresConEstado'
+import { calcularMetricasAgregadas, calcularMetricasTrabajador } from '../../lib/metrics'
 
 function IconUsers({ className }: { className?: string }) {
   return (
@@ -42,19 +47,23 @@ function IconGauge({ className }: { className?: string }) {
   )
 }
 
-const ALERTAS_DEMO = [
-  { trabajador: 'Óscar Ramírez', cert: 'Well control combinado', estado: 'vencido' as const, detalle: 'venció hace 6 días' },
-  { trabajador: 'Diego Cárdenas', cert: 'Espacios confinados entrante', estado: 'faltante' as const, detalle: 'nunca registrada' },
-  { trabajador: 'Julián Torres', cert: 'Alturas trabajador autorizado', estado: 'critico' as const, detalle: '10 días' },
-  { trabajador: 'Andrés Gaviria', cert: 'Brigadas integrales', estado: 'por_vencer' as const, detalle: '25 días' },
-]
+function formatearDetalle(estado: 'por_vencer' | 'critico' | 'vencido', dias?: number): string | undefined {
+  if (dias === undefined) return undefined
+  return estado === 'vencido' ? `hace ${Math.abs(dias)} días` : `${dias} días`
+}
 
 /**
  * Resumen admin (spec sección 10.2, opcional): tarjetas rápidas + centro de
- * notificaciones. Shell visual con datos de ejemplo — Fase 3 conecta con
- * `useVigiaStore` + `lib/metrics.ts` para que refleje el estado real.
+ * notificaciones + lista de No aptos, todo derivado en vivo de
+ * `useTrabajadoresConEstado` / `useNotificaciones`.
  */
 export default function AdminResumenPage() {
+  const items = useTrabajadoresConEstado()
+  const notificaciones = useNotificaciones()
+  const metricas = calcularMetricasAgregadas(items)
+
+  const noAptos = items.filter(({ trabajador, certsConEstado }) => calcularMetricasTrabajador(trabajador, certsConEstado).noApto)
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -63,11 +72,28 @@ export default function AdminResumenPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <KpiCard label="Trabajadores" value={6} icon={<IconUsers className="h-5 w-5" />} tone="brand" />
-        <KpiCard label="% cumplimiento" value={83} suffix="%" icon={<IconGauge className="h-5 w-5" />} tone="success" />
-        <KpiCard label="No aptos" value={2} icon={<IconBlockCircle className="h-5 w-5" />} tone="danger" />
-        <KpiCard label="Próximas a vencer" value={3} icon={<IconClock className="h-5 w-5" />} tone="warning" />
+        <KpiCard label="Trabajadores" value={metricas.numTrabajadores} icon={<IconUsers className="h-5 w-5" />} tone="brand" />
+        <KpiCard label="% cumplimiento" value={Math.round(metricas.porcentajeCumplimiento)} suffix="%" icon={<IconGauge className="h-5 w-5" />} tone="success" />
+        <KpiCard label="No aptos" value={metricas.noAptos} icon={<IconBlockCircle className="h-5 w-5" />} tone="danger" />
+        <KpiCard label="Próximas a vencer" value={metricas.proximasAVencer} icon={<IconClock className="h-5 w-5" />} tone="warning" />
       </div>
+
+      {noAptos.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <NoAptoFlag noApto variant="banner" />
+          <div className="flex flex-wrap gap-2">
+            {noAptos.map(({ trabajador }) => (
+              <Link
+                key={trabajador.id}
+                to={`/admin/trabajadores/${trabajador.id}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-estado-vencido transition-colors hover:bg-estado-vencido-soft-bg"
+              >
+                {trabajador.nombre}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -77,21 +103,28 @@ export default function AdminResumenPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <ul className="divide-y divide-slate-100">
-            {ALERTAS_DEMO.map((alerta) => (
-              <li key={`${alerta.trabajador}-${alerta.cert}`} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-ink-900">{alerta.trabajador}</p>
-                  <p className="text-sm text-slate-500">{alerta.cert}</p>
-                </div>
-                <EstadoBadge estado={alerta.estado} detalle={alerta.detalle} />
-              </li>
-            ))}
-          </ul>
+          {notificaciones.length === 0 ? (
+            <EmptyState title="Sin alertas pendientes" description="Todas las certificaciones están al día a la fecha simulada." />
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {notificaciones.map((alerta) => (
+                <li key={`${alerta.trabajadorId}-${alerta.certId}`}>
+                  <Link
+                    to={`/admin/trabajadores/${alerta.trabajadorId}`}
+                    className="flex flex-col gap-2 p-4 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-ink-900">{alerta.trabajadorNombre}</p>
+                      <p className="text-sm text-slate-500">{alerta.certNombre}</p>
+                    </div>
+                    <EstadoBadge estado={alerta.estado} detalle={formatearDetalle(alerta.estado, alerta.diasRestantes)} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
-
-      <NoAptoFlag noApto variant="banner" className="max-w-xl" />
     </div>
   )
 }

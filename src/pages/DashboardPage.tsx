@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ComplianceBarChart } from '../components/domain/ComplianceBarChart'
 import { EstadoBadge } from '../components/domain/EstadoBadge'
 import { EstadoDonutChart } from '../components/domain/EstadoDonutChart'
@@ -8,21 +8,14 @@ import { PageContainer } from '../components/layout/PageContainer'
 import { PublicFooter } from '../components/layout/PublicFooter'
 import { PublicHeader } from '../components/layout/PublicHeader'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
+import { EmptyState } from '../components/ui/EmptyState'
 import { Select } from '../components/ui/Select'
-import { taladrosSeed } from '../data/seed/taladros.seed'
+import { useTrabajadorConEstado } from '../hooks/useTrabajadorConEstado'
+import { useTrabajadoresConEstado } from '../hooks/useTrabajadoresConEstado'
+import { calcularMetricasAgregadas } from '../lib/metrics'
+import { useVigiaStore } from '../store/useVigiaStore'
 
 type FiltroTipo = 'todos' | 'taladro' | 'trabajador'
-
-/** Nombres de los 6 trabajadores de seed (spec sección 14) — solo para poblar
- * visualmente el filtro; el drill-down real lo conecta Fase 3. */
-const TRABAJADORES_DEMO = [
-  'Carlos Mendoza',
-  'Andrés Gaviria',
-  'Julián Torres',
-  'Óscar Ramírez',
-  'Diego Cárdenas',
-  'Laura Ríos',
-]
 
 const FILTRO_TABS: { value: FiltroTipo; label: string }[] = [
   { value: 'todos', label: 'Todos' },
@@ -99,14 +92,45 @@ function IconAlert({ className }: { className?: string }) {
 
 /**
  * Vista pública ("/", sin login) — vitrina de métricas (spec sección 10.1,
- * inspirada en el dashboard del ICCU). Shell visual con datos de ejemplo:
- * Fase 3 conecta `lib/metrics.ts` + el store para que los números y
- * gráficas reflejen el estado real/simulado.
+ * inspirada en el dashboard del ICCU). Todo se deriva en vivo de
+ * `useTrabajadoresConEstado` + `lib/metrics.ts`: agregar un trabajador desde
+ * el panel admin, mover la fecha simulada o editar el catálogo se refleja
+ * acá sin recargar (mismo store, misma fuente de verdad).
  */
 export default function DashboardPage() {
+  const taladros = useVigiaStore((state) => state.taladros)
+  const trabajadoresConEstado = useTrabajadoresConEstado()
+
   const [filtro, setFiltro] = useState<FiltroTipo>('todos')
-  const [taladroSel, setTaladroSel] = useState(taladrosSeed[0]?.id ?? '')
-  const [trabajadorSel, setTrabajadorSel] = useState(TRABAJADORES_DEMO[0])
+  const [taladroSel, setTaladroSel] = useState(taladros[0]?.id ?? '')
+  const [trabajadorSel, setTrabajadorSel] = useState(trabajadoresConEstado[0]?.trabajador.id ?? '')
+
+  const taladroSeleccionado = taladros.find((t) => t.id === taladroSel)
+
+  // Cumplimiento por taladro: SIEMPRE los 3, sin importar el filtro activo
+  // (spec sección 10.1: "barras de % de cumplimiento por taladro"), para
+  // poder comparar y resaltar el seleccionado.
+  const dataPorTaladro = useMemo(
+    () =>
+      taladros.map((taladro) => {
+        const items = trabajadoresConEstado.filter((item) => item.trabajador.taladroId === taladro.id)
+        const metricas = calcularMetricasAgregadas(items)
+        return { taladro: taladro.nombre, porcentaje: Math.round(metricas.porcentajeCumplimiento) }
+      }),
+    [taladros, trabajadoresConEstado],
+  )
+
+  const itemsFiltrados = useMemo(() => {
+    if (filtro === 'taladro' && taladroSel) {
+      return trabajadoresConEstado.filter((item) => item.trabajador.taladroId === taladroSel)
+    }
+    return trabajadoresConEstado
+  }, [filtro, taladroSel, trabajadoresConEstado])
+
+  const metricas = useMemo(() => calcularMetricasAgregadas(itemsFiltrados), [itemsFiltrados])
+
+  const operativos = itemsFiltrados.filter((item) => item.trabajador.tipo === 'operativo').length
+  const administrativos = itemsFiltrados.length - operativos
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -154,7 +178,7 @@ export default function DashboardPage() {
                     className="sm:max-w-xs"
                     value={taladroSel}
                     onChange={(e) => setTaladroSel(e.target.value)}
-                    options={taladrosSeed.map((t) => ({ value: t.id, label: t.nombre }))}
+                    options={taladros.map((t) => ({ value: t.id, label: t.nombre }))}
                   />
                 ) : (
                   <Select
@@ -162,7 +186,7 @@ export default function DashboardPage() {
                     className="sm:max-w-xs"
                     value={trabajadorSel}
                     onChange={(e) => setTrabajadorSel(e.target.value)}
-                    options={TRABAJADORES_DEMO.map((nombre) => ({ value: nombre, label: nombre }))}
+                    options={trabajadoresConEstado.map((item) => ({ value: item.trabajador.id, label: item.trabajador.nombre }))}
                   />
                 )}
               </CardContent>
@@ -170,19 +194,68 @@ export default function DashboardPage() {
           )}
 
           {filtro === 'trabajador' ? (
-            <WorkerDrillDownMock nombre={trabajadorSel} />
+            <WorkerDrillDown trabajadorId={trabajadorSel} />
           ) : (
             <>
               {/* Grid de KPIs */}
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-                <KpiCard label="Trabajadores" value={6} icon={<IconUsers className="h-5 w-5" />} tone="brand" sublabel="5 operativos · 1 administrativo" />
-                <KpiCard label="% de cumplimiento" value={83} suffix="%" icon={<IconGauge className="h-5 w-5" />} tone="success" sublabel="Σ cumplidas / Σ requeridas" />
-                <KpiCard label="Personas certificadas" value={60} suffix="%" icon={<IconBadgeCheck className="h-5 w-5" />} tone="brand" sublabel="3 de 5 operativos al 100%" />
-                <KpiCard label="No aptos para taladro" value={2} icon={<IconBlockCircle className="h-5 w-5" />} tone="danger" sublabel="Requisito de ingreso vencido/faltante" />
-                <KpiCard label="Certificaciones requeridas" value={19} icon={<IconClipboard className="h-5 w-5" />} sublabel="Según cargo de cada operativo" />
-                <KpiCard label="Certificaciones cumplidas" value={16} icon={<IconBadgeCheck className="h-5 w-5" />} tone="success" sublabel="Vigentes, por vencer o críticas" />
-                <KpiCard label="Próximas a vencer" value={3} icon={<IconClock className="h-5 w-5" />} tone="warning" sublabel="≤ 30 días para vencer" />
-                <KpiCard label="Vencidas" value={2} icon={<IconAlert className="h-5 w-5" />} tone="danger" sublabel="Requieren renovación inmediata" />
+                <KpiCard
+                  label="Trabajadores"
+                  value={metricas.numTrabajadores}
+                  icon={<IconUsers className="h-5 w-5" />}
+                  tone="brand"
+                  sublabel={`${operativos} operativos · ${administrativos} administrativos`}
+                />
+                <KpiCard
+                  label="% de cumplimiento"
+                  value={Math.round(metricas.porcentajeCumplimiento)}
+                  suffix="%"
+                  icon={<IconGauge className="h-5 w-5" />}
+                  tone="success"
+                  sublabel="Σ cumplidas / Σ requeridas"
+                />
+                <KpiCard
+                  label="Personas certificadas"
+                  value={Math.round(metricas.porcentajePersonasCertificadas)}
+                  suffix="%"
+                  icon={<IconBadgeCheck className="h-5 w-5" />}
+                  tone="brand"
+                  sublabel={`${metricas.personasCertificadas} de ${metricas.numTrabajadores} al 100%`}
+                />
+                <KpiCard
+                  label="No aptos para taladro"
+                  value={metricas.noAptos}
+                  icon={<IconBlockCircle className="h-5 w-5" />}
+                  tone="danger"
+                  sublabel="Requisito de ingreso vencido/faltante"
+                />
+                <KpiCard
+                  label="Certificaciones requeridas"
+                  value={metricas.requeridas}
+                  icon={<IconClipboard className="h-5 w-5" />}
+                  sublabel="Según cargo de cada operativo"
+                />
+                <KpiCard
+                  label="Certificaciones cumplidas"
+                  value={metricas.cumplidas}
+                  icon={<IconBadgeCheck className="h-5 w-5" />}
+                  tone="success"
+                  sublabel="Vigentes, por vencer o críticas"
+                />
+                <KpiCard
+                  label="Próximas a vencer"
+                  value={metricas.proximasAVencer}
+                  icon={<IconClock className="h-5 w-5" />}
+                  tone="warning"
+                  sublabel="≤ 30 días para vencer"
+                />
+                <KpiCard
+                  label="Vencidas"
+                  value={metricas.vencidas}
+                  icon={<IconAlert className="h-5 w-5" />}
+                  tone="danger"
+                  sublabel="Requieren renovación inmediata"
+                />
               </div>
 
               {/* Gráficas */}
@@ -191,11 +264,14 @@ export default function DashboardPage() {
                   <CardHeader>
                     <div>
                       <CardTitle>Cumplimiento por taladro</CardTitle>
-                      <CardDescription>% de certificaciones cumplidas sobre las requeridas</CardDescription>
+                      <CardDescription>
+                        % de certificaciones cumplidas sobre las requeridas
+                        {filtro === 'taladro' && taladroSeleccionado ? ` — resaltado: ${taladroSeleccionado.nombre}` : ''}
+                      </CardDescription>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <ComplianceBarChart />
+                    <ComplianceBarChart data={dataPorTaladro} destacado={filtro === 'taladro' ? taladroSeleccionado?.nombre : undefined} />
                   </CardContent>
                 </Card>
 
@@ -203,11 +279,13 @@ export default function DashboardPage() {
                   <CardHeader>
                     <div>
                       <CardTitle>Distribución de estados</CardTitle>
-                      <CardDescription>Todas las certificaciones requeridas</CardDescription>
+                      <CardDescription>
+                        {filtro === 'taladro' && taladroSeleccionado ? `Certificaciones requeridas en ${taladroSeleccionado.nombre}` : 'Todas las certificaciones requeridas'}
+                      </CardDescription>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <EstadoDonutChart />
+                    <EstadoDonutChart data={metricas.distribucionEstados} />
                   </CardContent>
                 </Card>
               </div>
@@ -221,44 +299,89 @@ export default function DashboardPage() {
   )
 }
 
-/** Drill-down mock por trabajador (spec sección 10.1). Datos hardcodeados a
- * modo de ejemplo visual — Fase 3 los deriva de `getCertificacionesEstadoTrabajador`. */
-function WorkerDrillDownMock({ nombre }: { nombre: string }) {
-  const noApto = nombre === 'Óscar Ramírez' || nombre === 'Diego Cárdenas'
+/** Drill-down por trabajador (spec sección 10.1): certificaciones que debería
+ * tener vs. las que tiene, próximas a vencer y vencidas sin actualizar, %
+ * de cumplimiento individual. */
+function WorkerDrillDown({ trabajadorId }: { trabajadorId: string }) {
+  const detalle = useTrabajadorConEstado(trabajadorId)
+  const cargos = useVigiaStore((state) => state.cargos)
+  const taladros = useVigiaStore((state) => state.taladros)
+
+  if (!detalle) {
+    return (
+      <Card>
+        <CardContent>
+          <EmptyState title="Selecciona un trabajador" description="Elige un trabajador en el selector de arriba para ver su detalle." />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const { trabajador, certsConEstado, metricas } = detalle
+  const cargo = cargos.find((c) => c.id === trabajador.cargoId)
+  const taladro = taladros.find((t) => t.id === trabajador.taladroId)
+  const proximasAVencer = certsConEstado.filter((c) => c.estado === 'por_vencer' || c.estado === 'critico').length
+  const vencidas = certsConEstado.filter((c) => c.estado === 'vencido').length
 
   return (
     <Card>
       <CardHeader>
         <div>
-          <CardTitle>{nombre}</CardTitle>
-          <CardDescription>Soldador · Rig 3003</CardDescription>
+          <CardTitle>{trabajador.nombre}</CardTitle>
+          <CardDescription>
+            {trabajador.tipo === 'operativo' ? `${cargo?.nombre ?? 'Sin cargo'} · ${taladro?.nombre ?? 'Sin taladro'}` : 'Administrativo'}
+          </CardDescription>
         </div>
-        <NoAptoFlag noApto={noApto} variant="pill" />
+        {trabajador.tipo === 'operativo' && <NoAptoFlag noApto={metricas.noApto} variant="pill" />}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KpiCard label="% cumplimiento" value={noApto ? 67 : 100} suffix="%" tone={noApto ? 'danger' : 'success'} />
-          <KpiCard label="Requeridas" value={3} />
-          <KpiCard label="Cumplidas" value={noApto ? 2 : 3} tone="success" />
-          <KpiCard label="Próx. a vencer" value={0} tone="warning" />
-        </div>
+        {trabajador.tipo === 'administrativo' ? (
+          <EmptyState
+            title="Sin catálogo de certificaciones"
+            description="Los trabajadores administrativos no tienen certificaciones asociadas en este MVP."
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <KpiCard label="% cumplimiento" value={Math.round(metricas.porcentajeCumplimiento)} suffix="%" tone={metricas.noApto ? 'danger' : 'success'} />
+              <KpiCard label="Requeridas" value={metricas.requeridas} />
+              <KpiCard label="Cumplidas" value={metricas.cumplidas} tone="success" />
+              <KpiCard label="Próx. a vencer" value={proximasAVencer} tone="warning" />
+            </div>
 
-        {noApto && <NoAptoFlag noApto />}
+            {metricas.noApto && <NoAptoFlag noApto />}
 
-        <ul className="divide-y divide-slate-100 rounded-vigia-md border border-slate-200">
-          <li className="flex items-center justify-between gap-3 p-3 text-sm">
-            <span className="text-ink-800">Alturas trabajador autorizado</span>
-            <EstadoBadge estado="vigente" variant="soft" size="sm" />
-          </li>
-          <li className="flex items-center justify-between gap-3 p-3 text-sm">
-            <span className="text-ink-800">Espacios confinados entrante</span>
-            <EstadoBadge estado={noApto ? 'faltante' : 'vigente'} variant="soft" size="sm" />
-          </li>
-          <li className="flex items-center justify-between gap-3 p-3 text-sm">
-            <span className="text-ink-800">Brigadas integrales</span>
-            <EstadoBadge estado="por_vencer" detalle="25 días" variant="soft" size="sm" />
-          </li>
-        </ul>
+            {certsConEstado.length === 0 ? (
+              <EmptyState title="Sin certificaciones requeridas" description="Este cargo no tiene certificaciones asociadas en el catálogo." />
+            ) : (
+              <ul className="divide-y divide-slate-100 rounded-vigia-md border border-slate-200">
+                {certsConEstado.map((cert) => (
+                  <li key={cert.certId} className="flex items-center justify-between gap-3 p-3 text-sm">
+                    <span className="text-ink-800">{cert.nombre}</span>
+                    <EstadoBadge
+                      estado={cert.estado}
+                      detalle={
+                        cert.diasRestantes === undefined
+                          ? undefined
+                          : cert.estado === 'vencido'
+                            ? `hace ${Math.abs(cert.diasRestantes)} días`
+                            : `${cert.diasRestantes} días`
+                      }
+                      variant="soft"
+                      size="sm"
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {vencidas > 0 && (
+              <p className="text-xs font-medium text-estado-vencido">
+                {vencidas} certificación{vencidas === 1 ? '' : 'es'} vencida{vencidas === 1 ? '' : 's'} sin actualizar.
+              </p>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   )
