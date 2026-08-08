@@ -1,11 +1,14 @@
 import { BrowserRouter } from 'react-router-dom'
+import { InstallGate } from './components/pwa/InstallGate'
 import AppRouter from './router/AppRouter'
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppRouter />
-    </BrowserRouter>
+    <InstallGate>
+      <BrowserRouter>
+        <AppRouter />
+      </BrowserRouter>
+    </InstallGate>
   )
 }
 

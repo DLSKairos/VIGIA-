@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { VigiaWordmark } from '../components/brand/VigiaLogo'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -60,7 +60,9 @@ export default function LoginPage() {
           className="pointer-events-none absolute -bottom-32 left-10 h-80 w-80 rounded-full bg-brand-500/10 blur-3xl"
           aria-hidden="true"
         />
-        <VigiaWordmark tone="light" withTagline />
+        <Link to="/" className="w-fit">
+          <VigiaWordmark tone="light" withTagline />
+        </Link>
         <div className="relative max-w-md">
           <p className="font-display text-2xl font-bold leading-snug text-white lg:text-3xl">
             Vigila cada certificación. Avisa antes de que venza. No deja entrar al taladro a quien no está apto.
@@ -74,10 +76,22 @@ export default function LoginPage() {
       <div className="flex flex-1 items-center justify-center bg-slate-50 p-6 sm:rounded-l-vigia-xl sm:p-10">
         <div className="w-full max-w-sm">
           <div className="mb-8 sm:hidden">
-            <VigiaWordmark tone="dark" withTagline />
+            <Link to="/" className="w-fit">
+              <VigiaWordmark tone="dark" withTagline />
+            </Link>
           </div>
 
-          <h1 className="font-display text-2xl font-bold text-ink-950">Ingresar al panel</h1>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-brand-600"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+              <path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Volver al inicio
+          </Link>
+
+          <h1 className="mt-4 font-display text-2xl font-bold text-ink-950">Ingresar al panel</h1>
           <p className="mt-1 text-sm text-slate-500">Usa tus credenciales de administrador para continuar.</p>
 
           <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4" noValidate>
