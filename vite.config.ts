@@ -11,15 +11,15 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       strategies: 'generateSW',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'favicon-32.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'VIGÍA',
         short_name: 'VIGÍA',
         description:
           'Control de capacitaciones y certificaciones — Siempre al día, siempre en operación.',
         lang: 'es',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#0B1220',
+        background_color: '#0B1220',
         display: 'standalone',
         start_url: '/',
         scope: '/',

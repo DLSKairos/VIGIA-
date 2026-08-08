@@ -1,15 +1,127 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
 /*
- * VIGÍA — index.css (Fase 1: scaffold)
- * -------------------------------------------------------------
- * Este archivo se deja MÍNIMO a propósito. El sistema de diseño real
- * (paleta de marca, tipografía, tokens con `@theme`) lo define el
- * agente de UX/UI en la fase siguiente. Por ahora solo se importa
- * Tailwind v4 para que las clases utilitarias funcionen end-to-end
- * durante el desarrollo del scaffold, el store y el routing.
+ * VIGÍA — Sistema de diseño (Fase 2: UX/UI)
+ * =============================================================================
+ * Dirección visual (spec VIGIA.md sección 13): registro corporativo pero
+ * moderno/app-like, evoca vigilancia + control industrial sin caer en
+ * cliché de casco+llave. VIGÍA es un producto de Kairos (no de TDCO): sin
+ * colores/logo del cliente.
+ *
+ * Metáfora elegida: el "vigía" es quien observa desde lo alto — un radar,
+ * un faro, un ojo que nunca deja de mirar el tablero. De ahí:
+ *   - Acento de marca "señal" (teal/cian): color de radar/beacon/profundidad,
+ *     deliberadamente DISTINTO de los 5 colores de semáforo para que nunca
+ *     se confunda una acción de marca con un estado de certificación.
+ *   - Superficie "ink" (azul-noche casi negro): la "sala de control" —
+ *     se usa en header/sidebar del admin y en el hero público, evocando
+ *     un tablero de monitoreo 24/7.
+ *   - Superficie clara ("steel", = slate de Tailwind): el lienzo de trabajo
+ *     de tablas, formularios y contenido denso — alto contraste, sobrio.
+ *   - Semáforo de 5 estados con contraste verificado (todos ≥ 4.5:1 con su
+ *     color de texto emparejado) para que sea legible "a distancia, tipo
+ *     tablero" incluso proyectado.
+ *
+ * Tipografía: pairing de 3 familias con roles claros —
+ *   - Manrope (display/heading): geométrica, moderna, con carácter técnico
+ *     sin ser fría.
+ *   - Inter (cuerpo/UI): el caballo de batalla para texto denso, tablas y
+ *     formularios — máxima legibilidad a tamaños pequeños.
+ *   - JetBrains Mono (datos): SOLO para lecturas numéricas (KPIs grandes,
+ *     días restantes, fechas de la barra de demo) — un guiño deliberado a
+ *     instrumentación/tablero de control (el "read-out" de un panel), sin
+ *     convertir toda la UI en una consola de código.
+ * =============================================================================
  */
 
+@theme {
+  /* ---------------------------------------------------------------------
+   * Tipografía
+   * ------------------------------------------------------------------- */
+  --font-display: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* ---------------------------------------------------------------------
+   * Marca — "señal" (teal/cian). Radar, faro, profundidad. Uso: acciones
+   * primarias, enlaces, focus rings, acentos gráficos. NUNCA para estados
+   * de certificación (eso es el semáforo, más abajo).
+   * ------------------------------------------------------------------- */
+  --color-brand-50: #effcfc;
+  --color-brand-100: #d7f5f6;
+  --color-brand-200: #b0eaec;
+  --color-brand-300: #7ddbe0;
+  --color-brand-400: #45c2c9;
+  --color-brand-500: #0ea5ae;
+  --color-brand-600: #0c8089;
+  --color-brand-700: #0a6870;
+  --color-brand-800: #0c525a;
+  --color-brand-900: #0f434b;
+  --color-brand-950: #082a30;
+
+  /* ---------------------------------------------------------------------
+   * Ink — superficie oscura "sala de control" (header/sidebar admin, hero
+   * público). Azul-noche casi negro, más cálido/propio que un slate puro.
+   * ------------------------------------------------------------------- */
+  --color-ink-950: #0b1220;
+  --color-ink-900: #101a2c;
+  --color-ink-800: #16233a;
+  --color-ink-700: #1f2e48;
+  --color-ink-600: #2b3e5e;
+  --color-ink-500: #3b4f73;
+  --color-ink-400: #5a6e8f;
+
+  /* ---------------------------------------------------------------------
+   * Semáforo de estados (spec sección 7). Contraste verificado (WCAG):
+   *   vigente    #15803D + texto blanco  -> 5.0:1
+   *   por_vencer #F2B705 + texto ink-950 -> 10.3:1
+   *   critico    #C2410C + texto blanco  -> 5.2:1
+   *   vencido    #B91C1C + texto blanco  -> 6.5:1
+   *   faltante   #44403C + texto blanco  -> 10.3:1 (gris con acento rojo,
+   *              spec: "gris/rojo" — se distingue de vencido por tono Y por
+   *              un acento rojo, ver EstadoBadge)
+   * Cada estado trae variante "soft" (chip claro) para usos secundarios
+   * (fondos de fila, chips en tablas densas) sin perder legibilidad.
+   * ------------------------------------------------------------------- */
+  --color-estado-vigente: #15803d;
+  --color-estado-vigente-soft-bg: #dcfce7;
+  --color-estado-vigente-soft-fg: #14532d;
+
+  --color-estado-por_vencer: #f2b705;
+  --color-estado-por_vencer-soft-bg: #fef3c7;
+  --color-estado-por_vencer-soft-fg: #78350f;
+
+  --color-estado-critico: #c2410c;
+  --color-estado-critico-soft-bg: #ffedd5;
+  --color-estado-critico-soft-fg: #7c2d12;
+
+  --color-estado-vencido: #b91c1c;
+  --color-estado-vencido-soft-bg: #fee2e2;
+  --color-estado-vencido-soft-fg: #7f1d1d;
+
+  --color-estado-faltante: #44403c;
+  --color-estado-faltante-soft-bg: #e7e5e4;
+  --color-estado-faltante-soft-fg: #292524;
+  --color-estado-faltante-accent: #dc2626;
+
+  /* ---------------------------------------------------------------------
+   * Radios — "panel" moderadamente anguloso (registro industrial/corporate,
+   * no burbujeante).
+   * ------------------------------------------------------------------- */
+  --radius-vigia-sm: 0.5rem;
+  --radius-vigia-md: 0.75rem;
+  --radius-vigia-lg: 1rem;
+  --radius-vigia-xl: 1.25rem;
+
+  /* Sombra sutil de "panel elevado" sobre lienzo claro */
+  --shadow-vigia-card: 0 1px 2px 0 rgb(11 18 32 / 0.04), 0 1px 3px 0 rgb(11 18 32 / 0.08);
+  --shadow-vigia-lifted: 0 4px 6px -2px rgb(11 18 32 / 0.06), 0 12px 24px -8px rgb(11 18 32 / 0.16);
+}
+
+/* ===========================================================================
+ * Base
+ * ========================================================================= */
 html,
 body,
 #root {
@@ -18,4 +130,40 @@ body,
 
 body {
   margin: 0;
+  background-color: var(--color-slate-50);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* Foco visible y consistente en toda la app (accesibilidad — sección 13). */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbar discreta, coherente con el registro "panel de control". */
+* {
+  scrollbar-color: var(--color-ink-400) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
