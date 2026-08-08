@@ -71,6 +71,14 @@
   --color-ink-600: #2b3e5e;
   --color-ink-500: #3b4f73;
   --color-ink-400: #5a6e8f;
+  /* 100/200/300: texto claro legible sobre fondo ink-800/900/950 (header y
+   * barra de demo del admin). Antes faltaban en la escala y las clases
+   * text-ink-100/200/300 no generaban ninguna utilidad real (Tailwind v4
+   * ignora tokens inexistentes), dejando texto casi invisible por bajo
+   * contraste — bug detectado en QA end-to-end, corregido acá. */
+  --color-ink-300: #8b9db8;
+  --color-ink-200: #c2ccdc;
+  --color-ink-100: #e6eaf1;
 
   /* ---------------------------------------------------------------------
    * Semáforo de estados (spec sección 7). Contraste verificado (WCAG):
