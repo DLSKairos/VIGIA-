@@ -43,7 +43,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(function
         className={cn(
           'h-11 w-full rounded-vigia-sm border bg-white px-3 text-sm text-ink-900',
           'transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/40',
-          '[color-scheme:light]',
+          'scheme-light',
           error ? 'border-estado-vencido focus:border-estado-vencido' : 'border-slate-300 focus:border-brand-500',
           'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400',
           className,
