@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { EstadoBadge } from '../domain/EstadoBadge'
 import { type Alerta, useNotificaciones } from '../../hooks/useNotificaciones'
 import { useVigiaStore } from '../../store/useVigiaStore'
@@ -36,6 +37,7 @@ export function NotifBell() {
   const toggle = useVigiaStore((state) => state.toggleNotifPanel)
   const setOpen = useVigiaStore((state) => state.setNotifPanelOpen)
   const containerRef = useRef<HTMLDivElement>(null)
+  const reduceMotion = useReducedMotion()
 
   useEffect(() => {
     if (!open) return
@@ -77,40 +79,47 @@ export function NotifBell() {
         )}
       </button>
 
-      {open && (
-        <div
-          role="dialog"
-          aria-label="Notificaciones"
-          className="absolute right-0 top-full z-40 mt-2 w-[22rem] max-w-[92vw] overflow-hidden rounded-vigia-md border border-slate-200 bg-white text-left shadow-vigia-lifted"
-        >
-          <div className="border-b border-slate-100 px-4 py-3">
-            <p className="text-sm font-semibold text-ink-900">Notificaciones</p>
-            <p className="text-xs text-slate-500">Certificaciones a 30 días, a 15 días y vencidas</p>
-          </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="dialog"
+            aria-label="Notificaciones"
+            className="absolute right-0 top-full z-40 mt-2 w-[22rem] max-w-[92vw] overflow-hidden rounded-vigia-md border border-slate-200 bg-white text-left shadow-vigia-lifted"
+            style={{ transformOrigin: 'top right' }}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+            transition={{ duration: reduceMotion ? 0.1 : 0.18, ease: 'easeOut' }}
+          >
+            <div className="border-b border-slate-100 px-4 py-3">
+              <p className="text-sm font-semibold text-ink-900">Notificaciones</p>
+              <p className="text-xs text-slate-500">Certificaciones a 30 días, a 15 días y vencidas</p>
+            </div>
 
-          {total === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-slate-500">Todo al día. Sin alertas pendientes.</p>
-          ) : (
-            <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto">
-              {alertas.map((alerta) => (
-                <li key={`${alerta.trabajadorId}-${alerta.certId}`}>
-                  <Link
-                    to={`/admin/trabajadores/${alerta.trabajadorId}`}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-slate-50"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-ink-900">{alerta.trabajadorNombre}</p>
-                      <p className="truncate text-xs text-slate-500">{alerta.certNombre}</p>
-                    </div>
-                    <EstadoBadge estado={alerta.estado} detalle={formatearDetalle(alerta)} size="sm" variant="soft" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+            {total === 0 ? (
+              <p className="px-4 py-6 text-center text-sm text-slate-500">Todo al día. Sin alertas pendientes.</p>
+            ) : (
+              <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto">
+                {alertas.map((alerta) => (
+                  <li key={`${alerta.trabajadorId}-${alerta.certId}`}>
+                    <Link
+                      to={`/admin/trabajadores/${alerta.trabajadorId}`}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-slate-50"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-ink-900">{alerta.trabajadorNombre}</p>
+                        <p className="truncate text-xs text-slate-500">{alerta.certNombre}</p>
+                      </div>
+                      <EstadoBadge estado={alerta.estado} detalle={formatearDetalle(alerta)} size="sm" variant="soft" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

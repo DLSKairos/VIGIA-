@@ -7,7 +7,7 @@ export default function NotFoundPage() {
       <VigiaMark className="h-14 w-14 text-ink-900 opacity-70" />
       <div>
         <p className="font-mono text-sm font-semibold uppercase tracking-widest text-brand-600">Error 404</p>
-        <h1 className="mt-1 font-display text-2xl font-bold text-ink-950 sm:text-3xl">Esta zona no está vigilada</h1>
+        <h1 className="mt-1 font-display tracking-display-lg text-2xl font-bold text-ink-950 sm:text-3xl">Esta zona no está vigilada</h1>
         <p className="mt-2 max-w-sm text-sm text-slate-500">La página que buscas no existe o cambió de lugar.</p>
       </div>
       <Link

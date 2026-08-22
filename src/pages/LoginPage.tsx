@@ -91,7 +91,7 @@ export default function LoginPage() {
             Volver al inicio
           </Link>
 
-          <h1 className="mt-4 font-display text-2xl font-bold text-ink-950">Ingresar al panel</h1>
+          <h1 className="mt-4 font-display tracking-display-lg text-2xl font-bold text-ink-950">Ingresar al panel</h1>
           <p className="mt-1 text-sm text-slate-500">Usa tus credenciales de administrador para continuar.</p>
 
           <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4" noValidate>

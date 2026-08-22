@@ -43,6 +43,16 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 
+  /* Tracking por tamaño (no un valor fijo global): a mayor cuerpo, el ojo
+   * percibe las letras más separadas entre sí, así que el tracking negativo
+   * debe crecer con el tamaño — y a la inversa, achicarlo en texto chico
+   * arruina la legibilidad. Se usan sólo en los headings display grandes
+   * (hero, títulos de página); los headings chicos de cards/modales quedan
+   * en tracking normal (0), que es lo correcto para ese tamaño. */
+  --tracking-display-lg: -0.02em; /* text-2xl / text-3xl — hero, títulos de página */
+  --tracking-display-md: -0.01em; /* text-xl — headings intermedios (ej. InstallGate) */
+  --tracking-display-sm: 0em; /* text-lg y menor — referencia explícita, sin usar aún */
+
   /* ---------------------------------------------------------------------
    * Marca — "señal" (teal/cian). Radar, faro, profundidad. Uso: acciones
    * primarias, enlaces, focus rings, acentos gráficos. NUNCA para estados
@@ -150,7 +160,6 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
 }
 
 /* Foco visible y consistente en toda la app (accesibilidad — sección 13). */

@@ -78,7 +78,7 @@ export default function TrabajadorDetallePage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="font-display text-2xl font-bold text-ink-950">{trabajador.nombre}</h1>
+            <h1 className="font-display tracking-display-lg text-2xl font-bold text-ink-950">{trabajador.nombre}</h1>
             <Badge tone={trabajador.tipo === 'operativo' ? 'brand' : 'neutral'}>{trabajador.tipo === 'operativo' ? 'Operativo' : 'Administrativo'}</Badge>
           </div>
           <p className="mt-1 text-sm text-slate-500">

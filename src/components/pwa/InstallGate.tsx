@@ -10,7 +10,7 @@ import { Button } from '../ui/Button'
  * instalada (modo standalone) pasan directo a los hijos.
  */
 export function InstallGate({ children }: { children: ReactNode }) {
-  const { os, showGate, canPromptInstall, promptInstall } = usePwaInstallGate()
+  const { os, showGate, canPromptInstall, promptInstall, dismissGate } = usePwaInstallGate()
 
   if (!showGate) return <>{children}</>
 
@@ -24,6 +24,16 @@ export function InstallGate({ children }: { children: ReactNode }) {
           <IosInstall />
         )}
       </div>
+      {/* Salida deliberada para quien no quiere instalar ahora: mantiene al
+          usuario en control (principio de agencia) sin competir visualmente
+          con el CTA de instalación. */}
+      <button
+        type="button"
+        onClick={dismissGate}
+        className="mt-6 text-xs text-ink-300 underline underline-offset-2 hover:text-ink-100"
+      >
+        Continuar sin instalar
+      </button>
     </div>
   )
 }
@@ -31,7 +41,7 @@ export function InstallGate({ children }: { children: ReactNode }) {
 function AndroidInstall({ canPrompt, onInstall }: { canPrompt: boolean; onInstall: () => void }) {
   return (
     <>
-      <h1 className="font-display text-xl font-bold text-white">Instalá la app VIGÍA</h1>
+      <h1 className="font-display tracking-display-md text-xl font-bold text-white">Instalá la app VIGÍA</h1>
       <p className="mt-2 text-sm text-ink-200">
         Para usar VIGÍA desde tu celular, instalá la app en tu pantalla de inicio.
       </p>
@@ -58,7 +68,7 @@ function AndroidInstall({ canPrompt, onInstall }: { canPrompt: boolean; onInstal
 function IosInstall() {
   return (
     <>
-      <h1 className="font-display text-xl font-bold text-white">Agregá VIGÍA a tu inicio</h1>
+      <h1 className="font-display tracking-display-md text-xl font-bold text-white">Agregá VIGÍA a tu inicio</h1>
       <p className="mt-2 text-sm text-ink-200">
         Safari no permite instalar apps directamente. Seguí estos pasos:
       </p>

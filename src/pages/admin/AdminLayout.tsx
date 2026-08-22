@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { motion, useReducedMotion } from 'framer-motion'
 import { type ReactElement, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { AlertasPopup } from '../../components/domain/AlertasPopup'
@@ -126,6 +127,8 @@ export default function AdminLayout() {
   const navigate = useNavigate()
 
   const [confirmRestablecerOpen, setConfirmRestablecerOpen] = useState(false)
+  const prefiereMovimientoReducido = useReducedMotion()
+  const transicionPillNav = prefiereMovimientoReducido ? { duration: 0 } : { type: 'spring' as const, stiffness: 500, damping: 40 }
 
   function handleLogout() {
     logout()
@@ -193,15 +196,26 @@ export default function AdminLayout() {
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold whitespace-nowrap',
-                  isActive
-                    ? 'border-brand-600 bg-brand-600 text-white'
-                    : 'border-slate-200 text-slate-600 hover:border-slate-300',
+                  'relative inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold whitespace-nowrap',
+                  isActive ? 'border-brand-600 text-white' : 'border-slate-200 text-slate-600 hover:border-slate-300',
                 )
               }
             >
-              <item.icon className="h-3.5 w-3.5" />
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <motion.span
+                      layoutId="mobile-nav-pill"
+                      className="absolute inset-0 rounded-full bg-brand-600"
+                      transition={transicionPillNav}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    <item.icon className="h-3.5 w-3.5" />
+                    {item.label}
+                  </span>
+                </>
+              )}
             </NavLink>
           ))}
         </div>

@@ -92,7 +92,7 @@ export default function CargosPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink-950">Cargos</h1>
+          <h1 className="font-display tracking-display-lg text-2xl font-bold text-ink-950">Cargos</h1>
           <p className="mt-1 text-sm text-slate-500">Ver, crear y editar cargos operativos y sus certificaciones requeridas.</p>
         </div>
         <Button iconLeft={<IconPlus className="h-4 w-4" />} onClick={abrirNuevo}>

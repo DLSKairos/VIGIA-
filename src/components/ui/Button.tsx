@@ -1,10 +1,16 @@
 import { type ButtonHTMLAttributes, type ReactNode, forwardRef } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from './cn'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+type NativeButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart' | 'onAnimationEnd'
+>
+
+export interface ButtonProps extends NativeButtonProps {
   variant?: ButtonVariant
   size?: ButtonSize
   /** Muestra spinner y deshabilita el botón (evita doble submit). */
@@ -38,6 +44,9 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
  * Botón base del sistema de diseño VIGÍA. Estados normal/hover/focus/
  * disabled/loading cubiertos. Target táctil mínimo 44px de alto en todos
  * los tamaños (accesibilidad, sección 13 del spec).
+ * Usa `whileTap` de framer-motion (Pointer Events) en vez de depender solo
+ * de `:active`, que en iOS Safari suele no dispararse con tap sin listeners
+ * touch — VIGÍA es táctil 100% en móvil.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
@@ -54,12 +63,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   },
   ref,
 ) {
+  const shouldReduceMotion = useReducedMotion()
+  const isDisabled = disabled || loading
+
   return (
-    <button
+    <motion.button
       ref={ref}
       type={props.type ?? 'button'}
-      disabled={disabled || loading}
+      disabled={isDisabled}
       aria-busy={loading || undefined}
+      whileTap={isDisabled || shouldReduceMotion ? undefined : { scale: 0.97 }}
+      transition={{ duration: 0.1 }}
       className={cn(
         'inline-flex cursor-pointer select-none items-center justify-center whitespace-nowrap rounded-vigia-sm font-medium transition-colors duration-150',
         'disabled:cursor-not-allowed disabled:pointer-events-none',
@@ -97,6 +111,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
           {iconRight}
         </span>
       )}
-    </button>
+    </motion.button>
   )
 })

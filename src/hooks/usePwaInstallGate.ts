@@ -19,17 +19,32 @@ function detectStandalone(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches || nav.standalone === true
 }
 
+const DISMISSED_KEY = 'vigia-install-gate-dismissed'
+
+function detectDismissed(): boolean {
+  return window.sessionStorage.getItem(DISMISSED_KEY) === 'true'
+}
+
 /**
  * Gatea la app en navegador móvil (fuera de la PWA instalada): en vez de
  * exponer la funcionalidad completa, la pantalla debe mostrar solo la
  * descarga (Android, vía beforeinstallprompt) o el instructivo "agregar a
  * inicio" (iOS, que no soporta instalación programática). Desktop y la PWA
  * ya instalada (display-mode standalone) nunca se gatean.
+ *
+ * El gate se puede descartar (`dismissGate`) para dejar pasar a quien no
+ * quiere instalar todavía. Ese descarte se guarda en `sessionStorage` (no
+ * `localStorage`) a propósito: el objetivo de negocio de incentivar la
+ * instalación sigue en pie, así que el nudge debe reaparecer en una sesión
+ * nueva del navegador en vez de quedar descartado para siempre.
  */
 export function usePwaInstallGate() {
   const [os] = useState<MobileOS>(() => (typeof window === 'undefined' ? null : detectMobileOS()))
   const [isStandalone, setIsStandalone] = useState(() =>
     typeof window === 'undefined' ? false : detectStandalone(),
+  )
+  const [dismissed, setDismissed] = useState(() =>
+    typeof window === 'undefined' ? false : detectDismissed(),
   )
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
 
@@ -55,7 +70,7 @@ export function usePwaInstallGate() {
   }, [])
 
   const isMobile = os !== null
-  const showGate = isMobile && !isStandalone
+  const showGate = isMobile && !isStandalone && !dismissed
 
   async function promptInstall() {
     if (!installPrompt) return
@@ -65,5 +80,10 @@ export function usePwaInstallGate() {
     setInstallPrompt(null)
   }
 
-  return { os, showGate, canPromptInstall: installPrompt !== null, promptInstall }
+  function dismissGate() {
+    window.sessionStorage.setItem(DISMISSED_KEY, 'true')
+    setDismissed(true)
+  }
+
+  return { os, showGate, canPromptInstall: installPrompt !== null, promptInstall, dismissGate }
 }

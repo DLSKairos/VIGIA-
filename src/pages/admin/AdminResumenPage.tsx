@@ -67,7 +67,7 @@ export default function AdminResumenPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-ink-950">Resumen</h1>
+        <h1 className="font-display tracking-display-lg text-2xl font-bold text-ink-950">Resumen</h1>
         <p className="mt-1 text-sm text-slate-500">Estado general de certificaciones a la fecha simulada.</p>
       </div>
 

@@ -1,3 +1,4 @@
+import { motion, useReducedMotion } from 'framer-motion'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { NoAptoFlag } from '../../../components/domain/NoAptoFlag'
@@ -48,6 +49,8 @@ export default function TrabajadoresListPage() {
 
   const [busqueda, setBusqueda] = useState('')
   const [filtro, setFiltro] = useState<FiltroTipo>('todos')
+  const prefiereMovimientoReducido = useReducedMotion()
+  const transicionPill = prefiereMovimientoReducido ? { duration: 0 } : { type: 'spring' as const, stiffness: 500, damping: 40 }
 
   const filtrados = useMemo(() => {
     const query = busqueda.trim().toLowerCase()
@@ -67,7 +70,7 @@ export default function TrabajadoresListPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink-950">Trabajadores</h1>
+          <h1 className="font-display tracking-display-lg text-2xl font-bold text-ink-950">Trabajadores</h1>
           <p className="mt-1 text-sm text-slate-500">
             {items.length} trabajador{items.length === 1 ? '' : 'es'} registrado{items.length === 1 ? '' : 's'}.
           </p>
@@ -86,20 +89,30 @@ export default function TrabajadoresListPage() {
           className="sm:max-w-xs"
         />
         <div role="tablist" aria-label="Filtrar trabajadores" className="flex flex-wrap gap-1 rounded-vigia-md border border-slate-200 bg-white p-1">
-          {FILTROS.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              role="tab"
-              aria-selected={filtro === f.value}
-              onClick={() => setFiltro(f.value)}
-              className={`h-9 cursor-pointer rounded-vigia-sm px-3 text-sm font-semibold transition-colors ${
-                filtro === f.value ? 'bg-ink-950 text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-ink-800'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+          {FILTROS.map((f) => {
+            const activo = filtro === f.value
+            return (
+              <button
+                key={f.value}
+                type="button"
+                role="tab"
+                aria-selected={activo}
+                onClick={() => setFiltro(f.value)}
+                className={`relative h-9 cursor-pointer rounded-vigia-sm px-3 text-sm font-semibold transition-colors ${
+                  activo ? 'text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-ink-800'
+                }`}
+              >
+                {activo && (
+                  <motion.span
+                    layoutId="filtro-activo"
+                    className="absolute inset-0 rounded-vigia-sm bg-ink-950"
+                    transition={transicionPill}
+                  />
+                )}
+                <span className="relative z-10">{f.label}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 

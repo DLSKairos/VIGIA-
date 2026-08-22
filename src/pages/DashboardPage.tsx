@@ -141,7 +141,7 @@ export default function DashboardPage() {
           {/* Encabezado + filtros */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="font-display text-2xl font-extrabold text-ink-950 sm:text-3xl">Panorama general</h1>
+              <h1 className="font-display tracking-display-lg text-2xl font-extrabold text-ink-950 sm:text-3xl">Panorama general</h1>
               <p className="mt-1 text-sm text-slate-500 sm:text-base">
                 Certificaciones al día, en riesgo y vencidas — actualizado en vivo con la fecha simulada.
               </p>
